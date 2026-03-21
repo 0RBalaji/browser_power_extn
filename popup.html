@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark Browser - Settings</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌙 Dark Browser</h1>
+      <p class="subtitle">Auto Dark Mode</p>
+    </header>
+
+    <main>
+      <!-- Status Section -->
+      <section class="status-section">
+        <div class="toggle-container">
+          <label class="toggle-label">
+            <input type="checkbox" id="darkModeToggle" class="toggle-checkbox">
+            <span class="toggle-slider"></span>
+          </label>
+          <span id="statusText" class="status-text">Dark Mode: ON</span>
+        </div>
+      </section>
+
+      <!-- Current Site Section -->
+      <section class="site-section">
+        <h2>Current Site</h2>
+        <div class="current-site">
+          <span id="currentSite" class="site-name">-</span>
+          <button id="excludeBtn" class="btn btn-secondary">Exclude</button>
+        </div>
+      </section>
+
+      <!-- Excluded Sites Section -->
+      <section class="excluded-section">
+        <h2>Excluded Sites</h2>
+        <div id="excludedList" class="excluded-list">
+          <p class="empty-message">No excluded sites</p>
+        </div>
+      </section>
+
+      <!-- Settings Section -->
+      <section class="settings-section">
+        <h2>Settings</h2>
+        <div class="setting-item">
+          <label for="themeSelect">Theme:</label>
+          <select id="themeSelect" class="select-input">
+            <option value="default">Default</option>
+            <option value="amoled">AMOLED</option>
+            <option value="blue">Blue</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Info Section -->
+      <section class="info-section">
+        <p>Dark Browser automatically converts white backgrounds to dark mode while preserving images, videos, and embedded content.</p>
+      </section>
+    </main>
+
+    <footer>
+      <a href="https://github.com" target="_blank">GitHub</a>
+      <span class="version">v1.0.0</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

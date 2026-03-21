@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Dark Browser - Auto Dark Mode",
+  "version": "1.0.0",
+  "description": "Automatically converts white backgrounds to dark mode while preserving images, videos, and embedded content",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Dark Browser"
+  }
+}
