@@ -1,0 +1,10 @@
+{
+  "name": "darkbrowser-extension",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dark Browser extension smoke-test harness",
+  "scripts": {
+    "test": "node scripts/smoke-test.js",
+    "test:syntax": "node --check content.js && node --check background.js && node --check popup.js && node --check welcome.js"
+  }
+}
