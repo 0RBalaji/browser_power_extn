@@ -56,36 +56,42 @@ These checks validate manifest integrity, required file presence, and script syn
 
 ```
 darkbrowser/
-├── manifest.json          # Extension metadata and configuration
-├── content.js             # Main dark mode script (injected into pages)
-├── dark-mode.css          # Global dark mode styles
-├── background.js          # Service worker for extension lifecycle
-├── popup.html             # Extension popup UI
-├── popup.css              # Popup styling
-├── popup.js               # Popup functionality
-├── welcome.html           # Welcome page on first install
-├── welcome.css            # Welcome page styling
-├── welcome.js             # Welcome page functionality
-└── README.md              # This file
+├── manifest.json                  # Extension metadata and entry points
+├── package.json                   # Test scripts
+├── scripts/
+│   └── smoke-test.js              # Automated smoke checks
+├── src/
+│   ├── extension/
+│   │   ├── content.js             # Dark mode engine
+│   │   ├── background.js          # Service worker
+│   │   └── dark-mode.css          # Minimal placeholder stylesheet
+│   ├── popup/
+│   │   ├── popup.html             # Extension popup UI
+│   │   ├── popup.css              # Popup styles
+│   │   └── popup.js               # Popup logic
+│   └── welcome/
+│       ├── welcome.html           # First-install page
+│       ├── welcome.css            # Welcome styles
+│       └── welcome.js             # Welcome page logic
+└── README.md
 ```
 
 ## How It Works
 
-### Content Script (`content.js`)
+### Content Script (`src/extension/content.js`)
 - Runs on every page load before DOM rendering
-- Detects elements with white backgrounds
-- Converts backgrounds to dark mode (#1e1e1e)
-- Adjusts text colors for readability
-- Preserves images, videos, iframes, and embedded content
-- Uses MutationObserver to handle dynamically added content
+- Applies a fast global dark conversion strategy
+- Preserves media and CSS background-image elements to avoid broken thumbnails
+- Skips transformation on pages that are already dark
+- Uses debounced mutation handling for performance on dynamic sites
 
-### Background Service Worker (`background.js`)
+### Background Service Worker (`src/extension/background.js`)
 - Manages extension lifecycle (install, update)
 - Handles settings storage
 - Communicates between popup and content scripts
 - Manages site exclusion list
 
-### Popup Interface (`popup.html`/`popup.js`)
+### Popup Interface (`src/popup/popup.html` / `src/popup/popup.js`)
 - Toggle dark mode on/off
 - View current website
 - Exclude/include specific sites
@@ -95,35 +101,20 @@ darkbrowser/
 ## Customization
 
 ### Colors
-Edit the `CONFIG` object in `content.js`:
+Edit the `CONFIG` object in `src/extension/content.js`:
 
 ```javascript
 const CONFIG = {
-  DARK_BG_COLOR: '#1e1e1e',      // Dark background
-  DARK_TEXT_COLOR: '#e0e0e0',    // Text on dark background
-  LIGHT_TEXT_COLOR: '#f0f0f0',   // Light text
-  WHITE_THRESHOLD: 240,           // RGB brightness threshold for white detection
+  darkBase: '#111111',
+  invertFilter: 'invert(1) hue-rotate(180deg)',
+  mutationDebounceMs: 120,
+  maxScanNodes: 2500,
+  preserveClass: '__darkbrowser-preserve'
 };
 ```
 
-### Excluded Tags
-Modify the `PRESERVE_TAGS` array to exclude additional elements:
-
-```javascript
-PRESERVE_TAGS: ['img', 'video', 'iframe', 'canvas', 'svg']
-```
-
-## CSS Variables
-
-The extension uses CSS custom properties for easy theming. Modify in `dark-mode.css`:
-
-```css
-:root {
-  --dm-bg-primary: #1e1e1e;
-  --dm-text-primary: #e0e0e0;
-  --dm-link-color: #6eb3f7;
-}
-```
+### Optional Stylesheet
+`src/extension/dark-mode.css` is intentionally minimal. Runtime styles are injected by `content.js`.
 
 ## Browser Compatibility
 
@@ -138,9 +129,9 @@ The extension uses CSS custom properties for easy theming. Modify in `dark-mode.
 ## Performance Considerations
 
 - **Lightweight**: Minimal CSS and JavaScript injected
-- **Optimized**: WeakSet tracks processed elements to avoid re-processing
-- **Efficient**: MutationObserver only processes new/changed elements
-- **Smart Detection**: Only processes light backgrounds, ignores already dark pages
+- **Optimized**: Debounced incremental scan for dynamic pages
+- **Efficient**: Preserves media and background-image elements without deep per-node overrides
+- **Smart Detection**: Skips conversion on already dark pages
 
 ## Limitations
 

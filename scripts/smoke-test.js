@@ -5,11 +5,11 @@ const { spawnSync } = require('child_process');
 const projectRoot = process.cwd();
 const requiredFiles = [
   'manifest.json',
-  'content.js',
-  'background.js',
-  'popup.html',
-  'popup.js',
-  'dark-mode.css'
+  'src/extension/content.js',
+  'src/extension/background.js',
+  'src/popup/popup.html',
+  'src/popup/popup.js',
+  'src/extension/dark-mode.css'
 ];
 
 function fail(message) {
@@ -108,7 +108,12 @@ function run() {
 
   requiredFiles.forEach(assertFileExists);
 
-  ['content.js', 'background.js', 'popup.js', 'welcome.js'].forEach(checkJsSyntax);
+  [
+    'src/extension/content.js',
+    'src/extension/background.js',
+    'src/popup/popup.js',
+    'src/welcome/welcome.js'
+  ].forEach(checkJsSyntax);
 
   const manifest = parseManifest();
   validateManifestShape(manifest);

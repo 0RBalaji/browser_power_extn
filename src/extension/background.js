@@ -15,7 +15,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 
     // Open welcome page
     chrome.tabs.create({
-      url: 'welcome.html'
+      url: 'src/welcome/welcome.html'
     });
   }
 
