@@ -130,6 +130,12 @@ h2 {
   font-weight: 500;
 }
 
+.toggle-container--spaced {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+
 /* Current Site */
 .current-site {
   display: flex;

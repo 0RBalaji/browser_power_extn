@@ -3,6 +3,33 @@
  * Handles extension lifecycle and manages settings
  */
 
+const ADBLOCK_RULESET_ID = 'adblock_rules';
+
+function syncAdBlockRuleset() {
+  chrome.storage.sync.get(['adBlockEnabled'], (items) => {
+    const enabled = items.adBlockEnabled === true;
+    chrome.declarativeNetRequest.updateEnabledRulesets(
+      {
+        enableRulesetIds: enabled ? [ADBLOCK_RULESET_ID] : [],
+        disableRulesetIds: enabled ? [] : [ADBLOCK_RULESET_ID]
+      },
+      () => {
+        if (chrome.runtime.lastError) {
+          console.warn('Dark Browser: ad block ruleset', chrome.runtime.lastError.message);
+        }
+      }
+    );
+  });
+}
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'sync' && Object.prototype.hasOwnProperty.call(changes, 'adBlockEnabled')) {
+    syncAdBlockRuleset();
+  }
+});
+
+syncAdBlockRuleset();
+
 // Initialize extension on install
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
@@ -10,7 +37,8 @@ chrome.runtime.onInstalled.addListener((details) => {
     chrome.storage.sync.set({
       darkModeEnabled: true,
       excludedSites: [],
-      theme: 'default'
+      theme: 'default',
+      adBlockEnabled: false
     });
 
     // Open welcome page
@@ -20,8 +48,8 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 
   if (details.reason === 'update') {
-    // Handle extension updates
     console.log('Dark Browser extension updated');
+    syncAdBlockRuleset();
   }
 });
 
@@ -68,11 +96,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === 'getSettings') {
-    chrome.storage.sync.get(['darkModeEnabled', 'excludedSites', 'theme'], (items) => {
+    chrome.storage.sync.get(['darkModeEnabled', 'excludedSites', 'theme', 'adBlockEnabled'], (items) => {
       sendResponse({
         darkModeEnabled: items.darkModeEnabled !== false,
         excludedSites: items.excludedSites || [],
-        theme: items.theme || 'default'
+        theme: items.theme || 'default',
+        adBlockEnabled: items.adBlockEnabled === true
       });
     });
     return true; // Will respond asynchronously

@@ -1,0 +1,85 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "doubleclick.net",
+        "googleadservices.com",
+        "googlesyndication.com",
+        "adservice.google.com"
+      ],
+      "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame", "object", "media"]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "adnxs.com",
+        "casalemedia.com",
+        "openx.net",
+        "pubmatic.com",
+        "rubiconproject.com",
+        "advertising.com"
+      ],
+      "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame", "object", "media"]
+    }
+  },
+  {
+    "id": 3,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "adform.net",
+        "criteo.com",
+        "criteo.net",
+        "quantserve.com",
+        "scorecardresearch.com",
+        "outbrain.com",
+        "taboola.com",
+        "3lift.com",
+        "triplelift.com"
+      ],
+      "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame", "object", "media"]
+    }
+  },
+  {
+    "id": 4,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "amazon-adsystem.com",
+        "spotxchange.com",
+        "indexexchange.com",
+        "contextweb.com",
+        "moatads.com",
+        "adsafeprotected.com"
+      ],
+      "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame", "object", "media"]
+    }
+  },
+  {
+    "id": 5,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": [
+        "turn.com",
+        "krxd.net",
+        "bluekai.com",
+        "ads.yahoo.com",
+        "adtechus.com",
+        "lijit.com",
+        "sovrn.com",
+        "yieldmo.com"
+      ],
+      "resourceTypes": ["script", "image", "xmlhttprequest", "sub_frame", "object", "media"]
+    }
+  }
+]

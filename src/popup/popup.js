@@ -14,6 +14,8 @@ const THEME_LABELS = {
 // DOM Elements
 const darkModeToggle = document.getElementById('darkModeToggle');
 const statusText = document.getElementById('statusText');
+const adBlockToggle = document.getElementById('adBlockToggle');
+const adBlockText = document.getElementById('adBlockText');
 const currentSiteSpan = document.getElementById('currentSite');
 const excludeBtn = document.getElementById('excludeBtn');
 const themeDropdown = document.getElementById('themeDropdown');
@@ -55,9 +57,12 @@ function syncFooterFromManifest() {
  * Load settings from storage
  */
 function loadSettings() {
-  chrome.storage.sync.get(['darkModeEnabled', 'excludedSites', 'theme'], (items) => {
+  chrome.storage.sync.get(['darkModeEnabled', 'excludedSites', 'theme', 'adBlockEnabled'], (items) => {
     darkModeToggle.checked = items.darkModeEnabled !== false;
     updateStatusText();
+
+    adBlockToggle.checked = items.adBlockEnabled === true;
+    updateAdBlockText();
 
     applyThemeToUi(items.theme || 'default');
   });
@@ -156,6 +161,12 @@ function setupEventListeners() {
   });
 
   excludeBtn.addEventListener('click', toggleExcludeSite);
+
+  adBlockToggle.addEventListener('change', (e) => {
+    chrome.storage.sync.set({ adBlockEnabled: e.target.checked }, () => {
+      updateAdBlockText();
+    });
+  });
 }
 
 function applyThemeToUi(theme) {

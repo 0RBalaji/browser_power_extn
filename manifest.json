@@ -1,13 +1,23 @@
 {
   "manifest_version": 3,
   "name": "Dark Browser - Auto Dark Mode",
-  "version": "2.1.1",
-  "description": "Automatically converts white backgrounds to dark mode while preserving images, videos, and embedded content",
+  "version": "2.2.1",
+  "description": "Auto dark mode for the web, optional network ad blocking, and per-site controls",
   "permissions": [
     "activeTab",
+    "declarativeNetRequest",
     "scripting",
     "storage"
   ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "adblock_rules",
+        "enabled": false,
+        "path": "rules/ad_rules.json"
+      }
+    ]
+  },
   "host_permissions": [
     "<all_urls>"
   ],

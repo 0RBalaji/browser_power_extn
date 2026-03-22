@@ -9,7 +9,8 @@ const requiredFiles = [
   'src/extension/background.js',
   'src/popup/popup.html',
   'src/popup/popup.js',
-  'src/extension/dark-mode.css'
+  'src/extension/dark-mode.css',
+  'rules/ad_rules.json'
 ];
 
 function fail(message) {
