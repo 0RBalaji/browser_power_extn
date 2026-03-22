@@ -3,13 +3,26 @@
  * Handles popup UI interactions
  */
 
+const EXTENSION_REPO_URL = 'https://github.com/0RBalaji/browser_power_extn';
+
+const THEME_LABELS = {
+  default: 'Default',
+  amoled: 'AMOLED',
+  blue: 'Blue'
+};
+
 // DOM Elements
 const darkModeToggle = document.getElementById('darkModeToggle');
 const statusText = document.getElementById('statusText');
 const currentSiteSpan = document.getElementById('currentSite');
 const excludeBtn = document.getElementById('excludeBtn');
-const excludedList = document.getElementById('excludedList');
-const themeSelect = document.getElementById('themeSelect');
+const themeDropdown = document.getElementById('themeDropdown');
+const themeDropdownTrigger = document.getElementById('themeDropdownTrigger');
+const themeDropdownValue = document.getElementById('themeDropdownValue');
+const themeDropdownPanel = document.getElementById('themeDropdownPanel');
+const themeDropdownList = document.getElementById('themeDropdownList');
+const footerGithub = document.getElementById('footerGithub');
+const footerVersion = document.getElementById('footerVersion');
 
 let currentTabUrl = null;
 let currentDomain = null;
@@ -18,10 +31,25 @@ let currentDomain = null;
  * Initialize popup on load
  */
 document.addEventListener('DOMContentLoaded', () => {
+  syncFooterFromManifest();
   loadSettings();
   getCurrentTab();
   setupEventListeners();
+  setupThemeDropdown();
 });
+
+/**
+ * Footer link + version from extension manifest (after popup DOM is ready).
+ */
+function syncFooterFromManifest() {
+  if (footerGithub) {
+    footerGithub.href = EXTENSION_REPO_URL;
+  }
+  if (footerVersion) {
+    const v = chrome.runtime.getManifest().version;
+    footerVersion.textContent = `v${v}`;
+  }
+}
 
 /**
  * Load settings from storage
@@ -31,10 +59,7 @@ function loadSettings() {
     darkModeToggle.checked = items.darkModeEnabled !== false;
     updateStatusText();
 
-    themeSelect.value = items.theme || 'default';
-
-    // Load excluded sites
-    displayExcludedSites(items.excludedSites || []);
+    applyThemeToUi(items.theme || 'default');
   });
 }
 
@@ -85,50 +110,6 @@ function updateStatusText() {
 }
 
 /**
- * Display excluded sites list
- */
-function displayExcludedSites(sites) {
-  if (sites.length === 0) {
-    excludedList.innerHTML = '<p class="empty-message">No excluded sites</p>';
-    return;
-  }
-
-  excludedList.innerHTML = '';
-  sites.forEach(site => {
-    const item = document.createElement('div');
-    item.className = 'excluded-item';
-
-    const siteSpan = document.createElement('span');
-    siteSpan.className = 'excluded-site';
-    siteSpan.textContent = site;
-
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'btn btn-remove';
-    removeBtn.textContent = 'Remove';
-    removeBtn.addEventListener('click', () => removeExcludedSite(site));
-
-    item.appendChild(siteSpan);
-    item.appendChild(removeBtn);
-    excludedList.appendChild(item);
-  });
-}
-
-/**
- * Remove excluded site
- */
-function removeExcludedSite(site) {
-  chrome.runtime.sendMessage({
-    action: 'removeExcludedSite',
-    site: site
-  }, (response) => {
-    chrome.storage.sync.get(['excludedSites'], (items) => {
-      displayExcludedSites(items.excludedSites || []);
-      updateExcludeButtonState();
-    });
-  });
-}
-
-/**
  * Add/remove current site from exclusions
  */
 function toggleExcludeSite() {
@@ -145,7 +126,6 @@ function toggleExcludeSite() {
     }
 
     chrome.storage.sync.set({ excludedSites }, () => {
-      displayExcludedSites(excludedSites);
       updateExcludeButtonState();
 
       // Reload current tab
@@ -176,8 +156,140 @@ function setupEventListeners() {
   });
 
   excludeBtn.addEventListener('click', toggleExcludeSite);
+}
 
-  themeSelect.addEventListener('change', (e) => {
-    chrome.storage.sync.set({ theme: e.target.value });
+function applyThemeToUi(theme) {
+  const key = theme in THEME_LABELS ? theme : 'default';
+  themeDropdownValue.textContent = THEME_LABELS[key];
+  themeDropdownList.querySelectorAll('[role="option"]').forEach((opt) => {
+    opt.setAttribute('aria-selected', opt.dataset.value === key ? 'true' : 'false');
+  });
+}
+
+function setupThemeDropdown() {
+  const optionEls = () =>
+    Array.from(themeDropdownList.querySelectorAll('[role="option"]'));
+
+  function openPanel(focusMode) {
+    themeDropdownPanel.hidden = false;
+    themeDropdown.classList.add('theme-dropdown--open');
+    themeDropdownTrigger.setAttribute('aria-expanded', 'true');
+    const opts = optionEls();
+    let focusTarget;
+    if (focusMode === 'last') {
+      focusTarget = opts[opts.length - 1];
+    } else if (focusMode === 'first') {
+      focusTarget = opts[0];
+    } else {
+      focusTarget =
+        opts.find((o) => o.getAttribute('aria-selected') === 'true') || opts[0];
+    }
+    requestAnimationFrame(() => focusTarget.focus());
+  }
+
+  function closePanel() {
+    themeDropdownPanel.hidden = true;
+    themeDropdown.classList.remove('theme-dropdown--open');
+    themeDropdownTrigger.setAttribute('aria-expanded', 'false');
+    themeDropdownTrigger.focus();
+  }
+
+  function togglePanel() {
+    if (themeDropdownPanel.hidden) {
+      openPanel();
+    } else {
+      closePanel();
+    }
+  }
+
+  themeDropdownTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    togglePanel();
+  });
+
+  document.addEventListener('mousedown', (e) => {
+    if (!themeDropdown.contains(e.target)) {
+      if (!themeDropdownPanel.hidden) {
+        closePanel();
+      }
+    }
+  });
+
+  const mainEl = document.querySelector('main');
+  if (mainEl) {
+    mainEl.addEventListener('scroll', () => {
+      if (!themeDropdownPanel.hidden) {
+        closePanel();
+      }
+    });
+  }
+
+  optionEls().forEach((opt) => {
+    opt.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const value = opt.dataset.value;
+      applyThemeToUi(value);
+      chrome.storage.sync.set({ theme: value });
+      closePanel();
+    });
+  });
+
+  themeDropdownTrigger.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (themeDropdownPanel.hidden) {
+        openPanel();
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (themeDropdownPanel.hidden) {
+        openPanel('last');
+      }
+    } else if (e.key === 'Escape' && !themeDropdownPanel.hidden) {
+      e.preventDefault();
+      closePanel();
+    }
+  });
+
+  themeDropdownList.addEventListener('keydown', (e) => {
+    const opts = optionEls();
+    const i = opts.indexOf(document.activeElement);
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closePanel();
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const next = i < 0 ? 0 : Math.min(i + 1, opts.length - 1);
+      opts[next].focus();
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prev = i < 0 ? opts.length - 1 : Math.max(i - 1, 0);
+      opts[prev].focus();
+      return;
+    }
+    if (e.key === 'Home') {
+      e.preventDefault();
+      opts[0].focus();
+      return;
+    }
+    if (e.key === 'End') {
+      e.preventDefault();
+      opts[opts.length - 1].focus();
+      return;
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      const active = document.activeElement;
+      if (active && active.dataset.value) {
+        const value = active.dataset.value;
+        applyThemeToUi(value);
+        chrome.storage.sync.set({ theme: value });
+        closePanel();
+      }
+    }
   });
 }

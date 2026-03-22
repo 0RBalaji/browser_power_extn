@@ -6,15 +6,19 @@
 const CONFIG = {
   darkBase: '#111111',
   invertFilter: 'invert(1) hue-rotate(180deg)',
-  mutationDebounceMs: 120,
-  maxScanNodes: 2500,
+  mutationDebounceMs: 180,
+  maxScanNodes: 900,
+  maxRootsPerFlush: 8,
+  maxAddedNodesPerMutation: 30,
   preserveClass: '__darkbrowser-preserve'
 };
 
 const API = globalThis.browser || globalThis.chrome;
 let observer = null;
 let flushTimer = null;
-const pendingRoots = new Set();
+const pendingRoots = [];
+let idleScanScheduled = false;
+let resizeTimer = null;
 
 function parseRgb(color) {
   if (!color) return null;
@@ -66,7 +70,7 @@ function isAlreadyDarkPage() {
   }
 
   const candidates = [];
-  const selectors = ['main', '[role="main"]', '#app', '#root', 'article', 'section', 'div'];
+  const selectors = ['main', '[role="main"]', '#app', '#root', 'article', 'section'];
   selectors.forEach((selector) => {
     const nodes = document.querySelectorAll(selector);
     for (let i = 0; i < nodes.length && candidates.length < 28; i += 1) {
@@ -95,13 +99,16 @@ function ensureRuntimeStyle() {
   styleElement.id = 'darkbrowser-runtime-style';
   styleElement.textContent = `
     html.__darkbrowser-enabled {
-      background: ${CONFIG.darkBase} !important;
+      /* Keep source background light so inversion yields dark canvas */
+      background: #ffffff !important;
       color-scheme: dark;
+      filter: ${CONFIG.invertFilter} !important;
+      min-height: 100% !important;
     }
 
     html.__darkbrowser-enabled body {
-      background: ${CONFIG.darkBase} !important;
-      filter: ${CONFIG.invertFilter} !important;
+      background: #ffffff !important;
+      min-height: 100% !important;
     }
 
     html.__darkbrowser-enabled img,
@@ -164,17 +171,50 @@ function scanRoot(root) {
   }
 }
 
+function queueUniqueRoot(root) {
+  const finalRoot = root || document.body || document.documentElement;
+  if (!finalRoot) return;
+  if (!pendingRoots.includes(finalRoot)) {
+    pendingRoots.push(finalRoot);
+  }
+}
+
 function flushScans() {
-  pendingRoots.forEach((root) => scanRoot(root));
-  pendingRoots.clear();
+  const roots = pendingRoots.splice(0, CONFIG.maxRootsPerFlush);
+  for (let i = 0; i < roots.length; i += 1) {
+    scanRoot(roots[i]);
+  }
+
+  if (pendingRoots.length > 0) {
+    flushTimer = setTimeout(flushScans, CONFIG.mutationDebounceMs);
+    return;
+  }
+
   flushTimer = null;
 }
 
 function queueScan(root) {
-  pendingRoots.add(root || document.body || document.documentElement);
+  queueUniqueRoot(root);
   if (flushTimer) return;
 
   flushTimer = setTimeout(flushScans, CONFIG.mutationDebounceMs);
+}
+
+function requestIdleScan(root) {
+  queueUniqueRoot(root);
+  if (idleScanScheduled) return;
+
+  idleScanScheduled = true;
+  const run = () => {
+    idleScanScheduled = false;
+    flushScans();
+  };
+
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(run, { timeout: 500 });
+  } else {
+    setTimeout(run, CONFIG.mutationDebounceMs);
+  }
 }
 
 function setupObserver() {
@@ -183,25 +223,34 @@ function setupObserver() {
   observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       if (mutation.type === 'childList') {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            queueScan(node);
+        const limit = Math.min(mutation.addedNodes.length, CONFIG.maxAddedNodesPerMutation);
+        for (let i = 0; i < limit; i += 1) {
+          const node = mutation.addedNodes[i];
+          if (node && node.nodeType === Node.ELEMENT_NODE) {
+            requestIdleScan(node);
           }
-        });
-      }
-
-      if (mutation.type === 'attributes' && mutation.target && mutation.target.nodeType === Node.ELEMENT_NODE) {
-        queueScan(mutation.target);
+        }
       }
     }
   });
 
   observer.observe(document.documentElement, {
     subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ['style', 'class']
+    childList: true
   });
+}
+
+function setupResizeListener() {
+  window.addEventListener('resize', () => {
+    if (resizeTimer) {
+      clearTimeout(resizeTimer);
+    }
+
+    resizeTimer = setTimeout(() => {
+      requestIdleScan(document.body || document.documentElement);
+      resizeTimer = null;
+    }, 220);
+  }, { passive: true });
 }
 
 function getStorageValues(keys) {
@@ -245,8 +294,9 @@ function startDarkMode() {
 
   document.documentElement.classList.add('__darkbrowser-enabled');
   ensureRuntimeStyle();
-  queueScan(document.body || document.documentElement);
+  requestIdleScan(document.body || document.documentElement);
   setupObserver();
+  setupResizeListener();
 }
 
 async function main() {

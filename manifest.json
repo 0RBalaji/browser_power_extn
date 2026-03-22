@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Dark Browser - Auto Dark Mode",
-  "version": "1.0.1",
+  "version": "2.1.1",
   "description": "Automatically converts white backgrounds to dark mode while preserving images, videos, and embedded content",
   "permissions": [
     "activeTab",

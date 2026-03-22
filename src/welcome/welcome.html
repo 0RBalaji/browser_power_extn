@@ -3,72 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Dark Browser</title>
+  <title>Dark Browser — You’re set</title>
   <link rel="stylesheet" href="welcome.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="logo">🌙</div>
-      <h1>Welcome to Dark Browser</h1>
-      <p>Auto Dark Mode for the Web</p>
+  <div class="page">
+    <div class="glow glow--a" aria-hidden="true"></div>
+    <div class="glow glow--b" aria-hidden="true"></div>
+
+    <header class="hero">
+      <p class="hero__eyebrow">Extension installed</p>
+      <h1 class="hero__title">Dark Browser</h1>
+      <p class="hero__lead">
+        Bright pages become easy on the eyes—without wrecking photos, video, or layout.
+      </p>
     </header>
 
-    <main>
-      <section class="feature">
-        <div class="feature-icon">🌓</div>
-        <h2>Automatic Dark Mode</h2>
-        <p>Instantly converts white backgrounds to dark mode on any website.</p>
-      </section>
-
-      <section class="feature">
-        <div class="feature-icon">🖼️</div>
-        <h2>Preserve Media</h2>
-        <p>Images, videos, and embedded content remain unchanged and look perfect.</p>
-      </section>
-
-      <section class="feature">
-        <div class="feature-icon">✍️</div>
-        <h2>Readable Text</h2>
-        <p>Text colors are automatically adjusted for optimal readability on dark backgrounds.</p>
-      </section>
-
-      <section class="feature">
-        <div class="feature-icon">⚙️</div>
-        <h2>Easy Controls</h2>
-        <p>Toggle dark mode on/off and exclude websites with just one click.</p>
-      </section>
-
-      <section class="feature">
-        <div class="feature-icon">🌐</div>
-        <h2>Works Everywhere</h2>
-        <p>Compatible with Chrome, Firefox, Edge, and Brave browsers.</p>
-      </section>
-
-      <div class="getting-started">
-        <h3>Getting Started</h3>
-        <ol>
-          <li>Click the Dark Browser icon in your toolbar</li>
-          <li>Toggle dark mode on or off</li>
-          <li>Exclude websites you don't want darkened</li>
-          <li>Enjoy comfortable browsing!</li>
-        </ol>
-      </div>
-
-      <div class="tips">
-        <h3>💡 Tips</h3>
-        <ul>
-          <li>Use the popup to exclude specific websites</li>
-          <li>Visit settings to choose different color themes</li>
-          <li>Dark mode works on dynamically loaded content too</li>
+    <main class="content">
+      <section class="panel" aria-labelledby="highlights-heading">
+        <h2 id="highlights-heading" class="panel__title">What you get</h2>
+        <ul class="highlight-grid">
+          <li class="highlight">
+            <span class="highlight__tag">Core</span>
+            <h3 class="highlight__name">Site-wide darkening</h3>
+            <p class="highlight__text">Flips light UIs to comfortable dark tones as pages load and update.</p>
+          </li>
+          <li class="highlight">
+            <span class="highlight__tag">Media</span>
+            <h3 class="highlight__name">Images &amp; video stay natural</h3>
+            <p class="highlight__text">Preserves media and embedded content so nothing looks inverted or wrong.</p>
+          </li>
+          <li class="highlight">
+            <span class="highlight__tag">Control</span>
+            <h3 class="highlight__name">Per-site rules</h3>
+            <p class="highlight__text">Exclude domains when a site already looks right or breaks when themed.</p>
+          </li>
+          <li class="highlight">
+            <span class="highlight__tag">Look</span>
+            <h3 class="highlight__name">Themes</h3>
+            <p class="highlight__text">Pick a palette in the popup—Default, AMOLED, or Blue—to match your taste.</p>
+          </li>
         </ul>
-      </div>
+      </section>
+
+      <section class="panel panel--steps" aria-labelledby="steps-heading">
+        <h2 id="steps-heading" class="panel__title">Start in three steps</h2>
+        <ol class="steps">
+          <li class="steps__item">
+            <span class="steps__num">1</span>
+            <div class="steps__body">
+              <h3 class="steps__label">Open the popup</h3>
+              <p class="steps__detail">Click the Dark Browser icon in the toolbar.</p>
+            </div>
+          </li>
+          <li class="steps__item">
+            <span class="steps__num">2</span>
+            <div class="steps__body">
+              <h3 class="steps__label">Toggle &amp; tune</h3>
+              <p class="steps__detail">Turn dark mode on or off and choose a theme.</p>
+            </div>
+          </li>
+          <li class="steps__item">
+            <span class="steps__num">3</span>
+            <div class="steps__body">
+              <h3 class="steps__label">Exclude when needed</h3>
+              <p class="steps__detail">Add exceptions for sites that should stay as-is.</p>
+            </div>
+          </li>
+        </ol>
+      </section>
     </main>
 
-    <footer>
-      <button id="closeBtn" class="btn-primary">Got it, let's go!</button>
-      <p><a href="https://github.com/0RBalaji/browser_power_extn" target="_blank" rel="noopener noreferrer">GitHub Repository</a></p>
-      <p class="version">Dark Browser v1.0.1</p>
+    <footer class="footer">
+      <button type="button" id="closeBtn" class="footer__cta">Close this tab</button>
+      <div class="footer__meta">
+        <a
+          class="footer__link"
+          href="https://github.com/0RBalaji/browser_power_extn"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Source on GitHub</a>
+        <span class="footer__sep" aria-hidden="true">·</span>
+        <span id="appVersion" class="footer__version"></span>
+      </div>
     </footer>
   </div>
 

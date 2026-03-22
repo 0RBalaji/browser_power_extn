@@ -13,21 +13,31 @@
   --border-color: #444;
 }
 
+html {
+  overflow: hidden;
+  height: fit-content;
+}
+
 body {
   width: 400px;
+  min-width: 320px;
+  margin: 0;
   background-color: var(--primary-bg);
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   font-size: 14px;
+  overflow: hidden;
 }
 
 .container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  /* Cap height so only <main> scrolls; header/footer stay fixed (no whole-document scroll). */
+  max-height: 580px;
 }
 
 header {
+  flex-shrink: 0;
   padding: 20px;
   background-color: var(--secondary-bg);
   border-bottom: 1px solid var(--border-color);
@@ -45,9 +55,12 @@ header h1 {
 }
 
 main {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 
 section {
@@ -134,50 +147,6 @@ h2 {
   color: var(--accent-color);
 }
 
-/* Excluded List */
-.excluded-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.empty-message {
-  color: var(--text-secondary);
-  font-style: italic;
-  text-align: center;
-  padding: 20px;
-}
-
-.excluded-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
-  background-color: var(--secondary-bg);
-  border-radius: 6px;
-  gap: 10px;
-}
-
-.excluded-site {
-  flex: 1;
-  word-break: break-all;
-}
-
-.btn-remove {
-  padding: 4px 8px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background-color 0.2s;
-}
-
-.btn-remove:hover {
-  background-color: #c82333;
-}
-
 /* Buttons */
 .btn {
   padding: 8px 12px;
@@ -198,26 +167,136 @@ h2 {
   background-color: #555;
 }
 
-/* Settings */
-.setting-item {
+/* Settings — theme card matches .current-site row weight */
+.theme-card {
+  position: relative;
+  z-index: 1;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   gap: 10px;
+  padding: 12px;
+  background-color: var(--secondary-bg);
+  border-radius: 6px;
 }
 
-.select-input {
-  padding: 6px 8px;
-  background-color: var(--secondary-bg);
+.theme-card-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+
+.theme-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.theme-dropdown--open {
+  z-index: 50;
+}
+
+.theme-dropdown__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  background-color: var(--primary-bg);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
-.select-input option {
-  background-color: var(--secondary-bg);
-  color: var(--text-primary);
+.theme-dropdown__trigger:hover {
+  border-color: #5a5a5a;
+  background-color: #252525;
+}
+
+.theme-dropdown__trigger:focus {
+  outline: none;
+}
+
+.theme-dropdown__trigger:focus-visible {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(110, 179, 247, 0.4);
+}
+
+.theme-dropdown__value {
+  flex: 1;
+  min-width: 0;
+}
+
+.theme-dropdown__chevron {
+  flex-shrink: 0;
+  width: 0;
+  height: 0;
+  margin-left: 10px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid var(--accent-color);
+  pointer-events: none;
+  border-radius: 1px;
+  transform-origin: 50% 35%;
+  transition: transform 0.2s ease;
+}
+
+.theme-dropdown--open .theme-dropdown__chevron {
+  transform: rotate(180deg);
+}
+
+.theme-dropdown__panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 60;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--primary-bg);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.theme-dropdown__list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scroll-padding: 8px 0;
+}
+
+.theme-dropdown__option {
+  padding: 12px 14px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  transition: background-color 0.12s ease;
+}
+
+.theme-dropdown__option:hover,
+.theme-dropdown__option:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.theme-dropdown__option[aria-selected='true'] {
+  background-color: rgba(110, 179, 247, 0.12);
+  color: var(--accent-color);
+  box-shadow: inset 3px 0 0 var(--accent-color);
 }
 
 /* Info Section */
@@ -233,6 +312,7 @@ h2 {
 
 /* Footer */
 footer {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -255,20 +335,45 @@ footer a:hover {
   color: var(--text-secondary);
 }
 
-/* Scrollbar */
-main::-webkit-scrollbar {
+/* Scrollbars — main + custom theme list (Firefox + WebKit) */
+.scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: #555 var(--primary-bg);
+}
+
+.scrollable::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollable::-webkit-scrollbar-track {
+  background: var(--primary-bg);
+  border-radius: 8px;
+  margin: 0;
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #555 0%, #444 100%);
+  border-radius: 8px;
+  border: 2px solid var(--primary-bg);
+  background-clip: padding-box;
+  min-height: 32px;
+}
+
+.scrollable::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #666 0%, #555 100%);
+  border: 2px solid var(--primary-bg);
+  background-clip: padding-box;
+}
+
+.scrollable--compact {
+  scrollbar-width: thin;
+  scrollbar-color: #555 var(--primary-bg);
+}
+
+.scrollable--compact::-webkit-scrollbar {
   width: 8px;
 }
 
-main::-webkit-scrollbar-track {
-  background: var(--primary-bg);
-}
-
-main::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-
-main::-webkit-scrollbar-thumb:hover {
-  background: #555;
+.scrollable--compact::-webkit-scrollbar-track {
+  margin: 4px 0;
 }

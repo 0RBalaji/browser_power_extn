@@ -1,6 +1,6 @@
 {
   "name": "darkbrowser-extension",
-  "version": "1.0.1",
+  "version": "2.1.1",
   "private": true,
   "description": "Dark Browser extension smoke-test harness",
   "scripts": {

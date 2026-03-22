@@ -13,7 +13,7 @@
       <p class="subtitle">Auto Dark Mode</p>
     </header>
 
-    <main>
+    <main class="scrollable">
       <!-- Status Section -->
       <section class="status-section">
         <div class="toggle-container">
@@ -34,24 +34,38 @@
         </div>
       </section>
 
-      <!-- Excluded Sites Section -->
-      <section class="excluded-section">
-        <h2>Excluded Sites</h2>
-        <div id="excludedList" class="excluded-list">
-          <p class="empty-message">No excluded sites</p>
-        </div>
-      </section>
-
       <!-- Settings Section -->
       <section class="settings-section">
         <h2>Settings</h2>
-        <div class="setting-item">
-          <label for="themeSelect">Theme:</label>
-          <select id="themeSelect" class="select-input">
-            <option value="default">Default</option>
-            <option value="amoled">AMOLED</option>
-            <option value="blue">Blue</option>
-          </select>
+        <div class="theme-card">
+          <div id="themeFieldLabel" class="theme-card-label">Theme</div>
+          <div class="theme-dropdown" id="themeDropdown">
+            <button
+              type="button"
+              class="theme-dropdown__trigger"
+              id="themeDropdownTrigger"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-controls="themeDropdownList"
+              aria-labelledby="themeFieldLabel themeDropdownValue"
+            >
+              <span class="theme-dropdown__value" id="themeDropdownValue">Default</span>
+              <span class="theme-dropdown__chevron" aria-hidden="true"></span>
+            </button>
+            <div class="theme-dropdown__panel" id="themeDropdownPanel" hidden>
+              <ul
+                class="theme-dropdown__list scrollable scrollable--compact"
+                id="themeDropdownList"
+                role="listbox"
+                aria-labelledby="themeFieldLabel"
+                tabindex="-1"
+              >
+                <li role="option" class="theme-dropdown__option" data-value="default" tabindex="-1">Default</li>
+                <li role="option" class="theme-dropdown__option" data-value="amoled" tabindex="-1">AMOLED</li>
+                <li role="option" class="theme-dropdown__option" data-value="blue" tabindex="-1">Blue</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -62,8 +76,8 @@
     </main>
 
     <footer>
-      <a href="https://github.com" target="_blank">GitHub</a>
-      <span class="version">v1.0.0</span>
+      <a id="footerGithub" href="https://github.com/0RBalaji/browser_power_extn" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <span id="footerVersion" class="version" aria-live="polite"></span>
     </footer>
   </div>
 
