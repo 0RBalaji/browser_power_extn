@@ -10,7 +10,8 @@ const CONFIG = {
   maxScanNodes: 900,
   maxRootsPerFlush: 8,
   maxAddedNodesPerMutation: 30,
-  preserveClass: '__darkbrowser-preserve'
+  preserveClass: '__darkbrowser-preserve',
+  postApplyCheckDelayMs: 700  // Allow time for JS-framework dark themes to hydrate
 };
 
 const API = globalThis.browser || globalThis.chrome;
@@ -19,6 +20,7 @@ let flushTimer = null;
 const pendingRoots = [];
 let idleScanScheduled = false;
 let resizeTimer = null;
+let postApplyCheckTimer = null;
 
 function parseRgb(color) {
   if (!color) return null;
@@ -61,7 +63,36 @@ function backgroundLuminance(el) {
   return getLuminance(parseRgb(style.backgroundColor));
 }
 
+function hasDarkThemeAttribute() {
+  const roots = [document.documentElement, document.body];
+  for (let i = 0; i < roots.length; i += 1) {
+    const el = roots[i];
+    const colorMode = el.getAttribute('data-color-mode');
+    if (colorMode && colorMode.toLowerCase().includes('dark')) return true;
+    const theme = el.getAttribute('data-theme');
+    if (theme && theme.toLowerCase().includes('dark')) return true;
+    const bsTheme = el.getAttribute('data-bs-theme');
+    if (bsTheme && bsTheme.toLowerCase().includes('dark')) return true;
+    if (el.classList && el.classList.contains('dark')) return true;
+  }
+  return false;
+}
+
+function hasDarkColorScheme() {
+  try {
+    const scheme = (
+      window.getComputedStyle(document.documentElement).getPropertyValue('color-scheme') || ''
+    ).trim();
+    return /\bdark\b/.test(scheme);
+  } catch (_) {
+    return false;
+  }
+}
+
 function isAlreadyDarkPage() {
+  // Fast checks: theme attributes and color-scheme declaration (before luminance scan)
+  if (hasDarkThemeAttribute() || hasDarkColorScheme()) return true;
+
   const htmlLum = backgroundLuminance(document.documentElement);
   const bodyLum = backgroundLuminance(document.body);
 
@@ -287,6 +318,43 @@ function setupMessageListener() {
   });
 }
 
+function removeDarkMode() {
+  if (postApplyCheckTimer !== null) {
+    clearTimeout(postApplyCheckTimer);
+    postApplyCheckTimer = null;
+  }
+  document.documentElement.classList.remove('__darkbrowser-enabled');
+  const styleEl = document.getElementById('darkbrowser-runtime-style');
+  if (styleEl) styleEl.remove();
+  if (observer) {
+    observer.disconnect();
+    observer = null;
+  }
+}
+
+function schedulePostApplyDarkCheck() {
+  // Some sites (e.g. Bitbucket) apply their own dark theme via JavaScript after
+  // DOMContentLoaded. We re-check after a short delay so we can remove our filter
+  // if the page turns out to have its own dark mode.
+  postApplyCheckTimer = setTimeout(() => {
+    postApplyCheckTimer = null;
+    if (!document.documentElement.classList.contains('__darkbrowser-enabled')) return;
+
+    // Use attribute and luminance checks only (not hasDarkColorScheme because
+    // ensureRuntimeStyle() sets color-scheme:dark, which would always match here).
+    if (hasDarkThemeAttribute()) {
+      removeDarkMode();
+      return;
+    }
+
+    const htmlLum = backgroundLuminance(document.documentElement);
+    const bodyLum = backgroundLuminance(document.body);
+    if ((htmlLum !== null && htmlLum < 75) || (bodyLum !== null && bodyLum < 75)) {
+      removeDarkMode();
+    }
+  }, CONFIG.postApplyCheckDelayMs);
+}
+
 function startDarkMode() {
   if (isAlreadyDarkPage()) {
     return;
@@ -297,6 +365,7 @@ function startDarkMode() {
   requestIdleScan(document.body || document.documentElement);
   setupObserver();
   setupResizeListener();
+  schedulePostApplyDarkCheck();
 }
 
 async function main() {
