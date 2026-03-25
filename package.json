@@ -5,6 +5,7 @@
   "description": "Dark Browser extension smoke-test harness",
   "scripts": {
     "test": "node scripts/smoke-test.js",
-    "test:syntax": "node --check src/extension/content.js && node --check src/extension/background.js && node --check src/popup/popup.js && node --check src/welcome/welcome.js"
+    "test:syntax": "node --check src/extension/content.js && node --check src/extension/background.js && node --check src/popup/popup.js && node --check src/welcome/welcome.js",
+    "package": "node scripts/build-zip.js"
   }
 }

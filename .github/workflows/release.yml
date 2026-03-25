@@ -1,0 +1,65 @@
+name: Release Extension Package
+
+# Trigger on any version tag (e.g. v2.3.0) or manually from the Actions UI.
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag to build (e.g. v2.3.0)'
+        required: false
+
+permissions:
+  contents: write   # needed to create/upload release assets
+
+jobs:
+  build-and-release:
+    name: Build zip & publish GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run smoke tests
+        run: node scripts/smoke-test.js
+
+      - name: Build extension zip
+        run: node scripts/build-zip.js
+
+      - name: Determine version
+        id: version
+        run: |
+          VERSION=$(node -e "process.stdout.write(require('./manifest.json').version)")
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "zip_name=darkbrowser-v${VERSION}.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Dark Browser v${{ steps.version.outputs.version }}
+          body: |
+            ## Dark Browser v${{ steps.version.outputs.version }}
+
+            ### Install in a few clicks (no cloning needed)
+
+            1. **Download** `${{ steps.version.outputs.zip_name }}` from the assets below.
+            2. **Install**:
+               - **Chrome / Edge / Brave** – open `chrome://extensions`, enable *Developer mode*, then extract the zip and drag the extracted folder onto the page *(or click "Load unpacked" and select the extracted folder)*.
+               - **Firefox** – open `about:debugging#/runtime/this-firefox`, click *Load Temporary Add-on*, then select the zip file directly.
+
+            > **Tip** – A Chrome Web Store listing is on the roadmap. Star ⭐ this repo to be notified when it drops.
+
+            ---
+            *Built automatically from tag `${{ github.ref_name }}`.*
+          files: dist/${{ steps.version.outputs.zip_name }}
+          draft: false
+          prerelease: false
