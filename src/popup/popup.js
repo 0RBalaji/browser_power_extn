@@ -115,6 +115,13 @@ function updateStatusText() {
 }
 
 /**
+ * Update ad blocker status text
+ */
+function updateAdBlockText() {
+  adBlockText.textContent = adBlockToggle.checked ? 'Ad blocker: ON' : 'Ad blocker: OFF';
+}
+
+/**
  * Add/remove current site from exclusions
  */
 function toggleExcludeSite() {
