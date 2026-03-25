@@ -15,6 +15,22 @@ A powerful browser extension that automatically converts white backgrounds to da
 
 ## Installation
 
+### Option 1 – Download a pre-built release (recommended, no cloning needed)
+
+1. Go to the [**Releases page**](https://github.com/0RBalaji/browser_power_extn/releases/latest) and download the latest `darkbrowser-v*.zip`.
+2. **Chrome / Edge / Brave**
+   - Open `chrome://extensions` (or `edge://extensions` / `brave://extensions`)
+   - Enable **Developer mode** (top-right toggle)
+   - Extract the downloaded zip, then drag the extracted folder onto the page — or click **"Load unpacked"** and select it.
+3. **Firefox**
+   - Open `about:debugging#/runtime/this-firefox`
+   - Click **Load Temporary Add-on**
+   - Select the downloaded zip file directly (no extraction needed).
+
+> **Chrome Web Store listing is on the roadmap** — once published you will be able to search for *"Dark Browser"* directly in the store and install with one click.
+
+### Option 2 – Build from source (developer mode)
+
 ### Chrome/Brave
 1. Download/clone this repository
 2. Go to `chrome://extensions/` (or `brave://extensions/`)
@@ -50,6 +66,12 @@ Run JavaScript syntax-only checks:
 npm run test:syntax
 ```
 
+Build a distributable zip (output written to `dist/`):
+
+```bash
+npm run package
+```
+
 These checks validate manifest integrity, required file presence, and script syntax.
 
 ## Project Structure
@@ -57,9 +79,13 @@ These checks validate manifest integrity, required file presence, and script syn
 ```
 darkbrowser/
 ├── manifest.json                  # Extension metadata and entry points
-├── package.json                   # Test scripts
+├── package.json                   # Test/build scripts
+├── .github/
+│   └── workflows/
+│       └── release.yml            # Auto-build zip & publish GitHub Release on tag push
 ├── scripts/
-│   └── smoke-test.js              # Automated smoke checks
+│   ├── smoke-test.js              # Automated smoke checks
+│   └── build-zip.js               # Package extension into a distributable zip
 ├── src/
 │   ├── extension/
 │   │   ├── content.js             # Dark mode engine
@@ -70,7 +96,7 @@ darkbrowser/
 │   │   ├── popup.css              # Popup styles
 │   │   └── popup.js               # Popup logic
 │   └── welcome/
-│       ├── welcome.html           # First-install page
+│       ├── welcome.html           # First-install page (includes download/install panel)
 │       ├── welcome.css            # Welcome styles
 │       └── welcome.js             # Welcome page logic
 └── README.md
