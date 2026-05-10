@@ -133,7 +133,7 @@ function validateDarkModeSanity(manifest) {
     return;
   }
 
-  if (/html\.__darkbrowser-enabled[\s\S]*?background:\s*#ffffff/i.test(content) && /html\.__darkbrowser-enabled[\s\S]*?filter:\s*\$\{CONFIG\.invertFilter\}/.test(content)) {
+  if (/html\.__darkbrowser-enabled[\s\S]*?background:\s*#ffffff/i.test(content) && content.includes('filter: ${CONFIG.invertFilter}')) {
     pass('Dark-mode root style keeps dark conversion baseline');
   } else {
     fail('Missing dark-mode root style baseline for background/filter conversion');
@@ -205,8 +205,13 @@ function validateDarkModeSanity(manifest) {
     scores.push(10);
   }
 
-  const conversionEfficiencyScore = Math.min(100, Math.max(0, Math.round(scores.reduce((sum, score) => sum + score, 0) / Math.max(scores.length, 1))));
   const version = manifest && manifest.version ? manifest.version : 'unknown';
+  if (scores.length === 0) {
+    fail('Could not compute efficiency score due to missing performance metrics');
+    return;
+  }
+
+  const conversionEfficiencyScore = Math.min(100, Math.max(0, Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)));
   info(`v${version} conversion efficiency score: ${conversionEfficiencyScore}/100`);
 
   if (conversionEfficiencyScore < 55 || lagChecks.includes(false)) {
