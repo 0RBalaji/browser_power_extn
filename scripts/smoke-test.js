@@ -12,6 +12,14 @@ const requiredFiles = [
   'src/extension/dark-mode.css',
   'rules/ad_rules.json'
 ];
+const contentScriptPath = path.join(projectRoot, 'src/extension/content.js');
+const mediaSelectors = ['img', 'video', 'picture', 'canvas', 'svg', 'iframe', 'embed', 'object', '[role="img"]'];
+const lagThresholds = {
+  mutationDebounceMs: 250,
+  maxScanNodes: 2000,
+  maxRootsPerFlush: 12,
+  maxAddedNodesPerMutation: 100
+};
 
 function fail(message) {
   console.error(`FAIL: ${message}`);
@@ -20,6 +28,10 @@ function fail(message) {
 
 function pass(message) {
   console.log(`PASS: ${message}`);
+}
+
+function info(message) {
+  console.log(`INFO: ${message}`);
 }
 
 function assertFileExists(relativePath) {
@@ -104,6 +116,106 @@ function validateManifestShape(manifest) {
   }
 }
 
+function parseConfigNumber(content, key) {
+  const regex = new RegExp(`${key}\\s*:\\s*(\\d+)`);
+  const match = content.match(regex);
+  if (!match) return null;
+  return Number(match[1]);
+}
+
+function validateDarkModeSanity(manifest) {
+  let content = '';
+
+  try {
+    content = fs.readFileSync(contentScriptPath, 'utf8');
+  } catch (error) {
+    fail(`Could not read content script for sanity checks: ${error.message}`);
+    return;
+  }
+
+  if (/html\.__darkbrowser-enabled[\s\S]*?background:\s*#ffffff/i.test(content) && /html\.__darkbrowser-enabled[\s\S]*?filter:\s*\$\{CONFIG\.invertFilter\}/.test(content)) {
+    pass('Dark-mode root style keeps dark conversion baseline');
+  } else {
+    fail('Missing dark-mode root style baseline for background/filter conversion');
+  }
+
+  const missingSelectors = mediaSelectors.filter((selector) => !content.includes(`html.__darkbrowser-enabled ${selector}`));
+  if (missingSelectors.length > 0) {
+    fail(`Media preserve selectors missing: ${missingSelectors.join(', ')}`);
+  } else {
+    pass('Media preserve selectors are present (images remain untainted)');
+  }
+
+  if (content.includes('style.backgroundImage') && content.includes('CONFIG.preserveClass') && content.includes('classList.add(CONFIG.preserveClass)')) {
+    pass('Background-image elements are marked for preservation');
+  } else {
+    fail('Background-image preservation guard is missing');
+  }
+
+  if (/\.innerHTML\s*=/.test(content) || /document\.write\(/.test(content)) {
+    fail('Unsafe DOM write APIs detected that may break pages');
+  } else {
+    pass('No unsafe DOM write APIs detected');
+  }
+
+  const lagChecks = Object.keys(lagThresholds).map((key) => {
+    const value = parseConfigNumber(content, key);
+    if (value === null || Number.isNaN(value)) {
+      fail(`Missing performance config value: ${key}`);
+      return false;
+    }
+
+    if (value > lagThresholds[key]) {
+      fail(`Lag risk: ${key}=${value} exceeds limit ${lagThresholds[key]}`);
+      return false;
+    }
+
+    pass(`Lag guard OK: ${key}=${value}`);
+    return true;
+  });
+
+  if (content.includes('requestIdleCallback')) {
+    pass('Idle callback scheduling is used for better responsiveness');
+  } else {
+    fail('requestIdleCallback fallback scheduling is missing');
+  }
+
+  const scores = [];
+  const mutationDebounceMs = parseConfigNumber(content, 'mutationDebounceMs');
+  const maxScanNodes = parseConfigNumber(content, 'maxScanNodes');
+  const maxRootsPerFlush = parseConfigNumber(content, 'maxRootsPerFlush');
+  const maxAddedNodesPerMutation = parseConfigNumber(content, 'maxAddedNodesPerMutation');
+
+  if (mutationDebounceMs !== null) {
+    scores.push(Math.max(0, 100 - Math.round((mutationDebounceMs / lagThresholds.mutationDebounceMs) * 45)));
+  }
+  if (maxScanNodes !== null) {
+    scores.push(Math.max(0, 100 - Math.round((maxScanNodes / lagThresholds.maxScanNodes) * 30)));
+  }
+  if (maxRootsPerFlush !== null) {
+    scores.push(Math.max(0, 100 - Math.round((maxRootsPerFlush / lagThresholds.maxRootsPerFlush) * 15)));
+  }
+  if (maxAddedNodesPerMutation !== null) {
+    scores.push(Math.max(0, 100 - Math.round((maxAddedNodesPerMutation / lagThresholds.maxAddedNodesPerMutation) * 10)));
+  }
+  if (content.includes('requestIdleCallback')) {
+    scores.push(15);
+  }
+  if (content.includes('if (isAlreadyDarkPage())')) {
+    scores.push(10);
+  }
+
+  const conversionEfficiencyScore = Math.min(100, Math.max(0, Math.round(scores.reduce((sum, score) => sum + score, 0) / Math.max(scores.length, 1))));
+  const version = manifest && manifest.version ? manifest.version : 'unknown';
+  info(`v${version} conversion efficiency score: ${conversionEfficiencyScore}/100`);
+
+  if (conversionEfficiencyScore < 70 || lagChecks.includes(false)) {
+    fail('Efficiency score is below acceptable sanity threshold');
+  } else {
+    pass('Efficiency score meets sanity threshold');
+  }
+}
+
 function run() {
   console.log('Running Dark Browser extension smoke tests...');
 
@@ -118,6 +230,7 @@ function run() {
 
   const manifest = parseManifest();
   validateManifestShape(manifest);
+  validateDarkModeSanity(manifest);
 
   if (process.exitCode) {
     console.error('\nSmoke tests completed with failures.');

@@ -52,6 +52,18 @@ npm run test:syntax
 
 These checks validate manifest integrity, required file presence, and script syntax.
 
+### CI Automation (PR + Merge)
+
+GitHub Actions now runs sanity automation on every pull request and on pushes to `main`/`master`.
+
+CI checks include:
+- Manifest and required-file validation
+- JavaScript syntax checks
+- Dark-mode sanity checks (dark baseline + media preservation)
+- Page-safety guard checks (no unsafe direct DOM write APIs)
+- Lag-risk checks against performance configuration thresholds
+- Version-tagged conversion efficiency score output
+
 ## Project Structure
 
 ```
