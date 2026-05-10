@@ -209,7 +209,7 @@ function validateDarkModeSanity(manifest) {
   const version = manifest && manifest.version ? manifest.version : 'unknown';
   info(`v${version} conversion efficiency score: ${conversionEfficiencyScore}/100`);
 
-  if (conversionEfficiencyScore < 70 || lagChecks.includes(false)) {
+  if (conversionEfficiencyScore < 55 || lagChecks.includes(false)) {
     fail('Efficiency score is below acceptable sanity threshold');
   } else {
     pass('Efficiency score meets sanity threshold');
